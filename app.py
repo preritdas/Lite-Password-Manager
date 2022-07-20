@@ -1,4 +1,5 @@
 import sys
+import getpass
 import sqlite3 as sql
 from cryptography.fernet import Fernet
 
@@ -7,14 +8,15 @@ fernet = Fernet(key)
 
 """This is the main class representing a Password object and all associated methods"""
 class Password_Obj:
-    encrypted_password = None
+   
 
-    def __init__(self,account_description = None, user = None, _password = None, email = None):
+    def __init__(self,account_description = None, user = None, _password = None, email = None, *encrypted_password):
         """Password constructor method"""
         self.account_description = account_description
         self.user = user
         self.email = email
         self.password = _password
+        self.encrypted_password = encrypted_password
 
     def get_password_info(self):
         """Getting the passowrd data from the user"""   
@@ -36,10 +38,10 @@ class Password_Obj:
         user = input()
 
         print("\nPlease enter the password for this account:")
-        _password = input()
+        _password = getpass.getpass(prompt="******")
 
         print("\nPlease enter again the password to confirm is valid:")
-        password_validation = input()
+        password_validation = getpass.getpass(prompt="******")
 
         """Here we are validating the entered password is valid or that at least matches"""
         while True:
@@ -64,18 +66,24 @@ def main(argv):
     Password = Password_Obj()
 
     """Arguments system"""
-    if argv[1] == "--newpassword":
-        """Requesting information to the user"""
-        account_description, user, _password, email = Password.request_password_info()
-    elif argv[1] == "--showallpasswords":
-        print("showing all passwords")
-    elif argv[1] == "--getpassword":
-        print("getting password")
+    """
+    BUG: We cannot assure argv list will have only the argument enter by the user, it may have the path where the script was executed,
+    It may also happen that we go beyond the lenght of argv, since we are assumpting it only has one element and causing a list index error
+    """
+    print(argv)
+    print(len(argv))
+    if len(argv) != 0:
+        if argv[1] == "--newpassword":
+            """Requesting information to the user"""
+            account_description, user, _password, email = Password.request_password_info()
+        elif argv[1] == "--showallpasswords":
+            print("showing all passwords")
+        elif argv[1] == "--getpassword":
+            print("getting password")
     else:
         print("Use --help to see options")
         return
         
-
     """Since we now have data from the user, let's fill up the empty Password Object"""   
     Password.__init__(account_description, user, _password, email)
 
