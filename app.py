@@ -1,5 +1,5 @@
-import sys
-import getpass
+from ast import arg
+import sys, getpass
 import sqlite3 as sql
 from cryptography.fernet import Fernet
 
@@ -66,23 +66,21 @@ def main(argv):
     Password = Password_Obj()
 
     """Arguments system"""
-    """
-    BUG: We cannot assure argv list will have only the argument enter by the user, it may have the path where the script was executed,
-    It may also happen that we go beyond the lenght of argv, since we are assumpting it only has one element and causing a list index error
-    """
-    print(argv)
-    print(len(argv))
-    if len(argv) != 0:
-        if argv[1] == "--newpassword":
+    argv_index = argv.index(argv[0])
+    if argv_index == 0:
+        if argv[argv_index] == "--newpassword":
             """Requesting information to the user"""
             account_description, user, _password, email = Password.request_password_info()
-        elif argv[1] == "--showallpasswords":
+        elif argv[argv_index] == "--showallpasswords":
             print("showing all passwords")
-        elif argv[1] == "--getpassword":
+        elif argv[argv_index] == "--getpassword":
             print("getting password")
+        elif argv[argv_index] == "--help":
+            print("Displaying usage options")
+            sys.exit(0)
     else:
         print("Use --help to see options")
-        return
+        sys.exit(0)
         
     """Since we now have data from the user, let's fill up the empty Password Object"""   
     Password.__init__(account_description, user, _password, email)
@@ -94,4 +92,4 @@ def main(argv):
     Password.get_password_info()
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main(sys.argv[1:])
