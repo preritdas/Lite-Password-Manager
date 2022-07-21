@@ -9,7 +9,6 @@ fernet = Fernet(key)
 """This is the main class representing a Password object and all associated methods"""
 class Password_Obj:
    
-
     def __init__(self,account_description = None, user = None, _password = None, email = None, *encrypted_password):
         """Password constructor method"""
         self.account_description = account_description
@@ -61,7 +60,26 @@ class Password_Obj:
         string = self.password.encode()
         self.encrypted_password = fernet.encrypt(string)
 
+    def load_password_database(self):
+        return
+
+def init_SQL_Db(sql):
+    """Intializing SQL Lite Data base"""
+    try:
+        sql_connection = sql.connect("sql.db")
+        cursor = sql_connection.cursor()
+        print("SQL database initialized")
+        query = 'select sqlite_version();'
+        cursor.execute(query)
+        result = cursor.fetchall()
+        print(f"SQL database version {result}")
+    except sql.Error as error:
+        print(f"SQL database error: {error}")
+
 def main(argv):
+    """Let's first init the DB"""
+    init_SQL_Db(sql)
+
     """Instantiating the Password object as empty, we'll fill out the data later on"""
     Password = Password_Obj()
 
