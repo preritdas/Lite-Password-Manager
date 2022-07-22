@@ -37,10 +37,10 @@ class Password_Obj:
         user = input()
 
         print("\nPlease enter the password for this account:")
-        _password = getpass.getpass(prompt="******")
+        _password = getpass.getpass(prompt=" ")
 
         print("\nPlease enter again the password to confirm is valid:")
-        password_validation = getpass.getpass(prompt="******")
+        password_validation = getpass.getpass(prompt=" ")
 
         """Here we are validating the entered password is valid or that at least matches"""
         while True:
@@ -63,25 +63,44 @@ class Password_Obj:
     def load_password_database(self):
         return
 
-def init_SQL_Db(sql):
-    """Intializing SQL Lite Data base"""
-    try:
-        sql_connection = sql.connect("sql.db")
-        cursor = sql_connection.cursor()
-        print("SQL database initialized")
-        query = 'select sqlite_version();'
-        cursor.execute(query)
-        result = cursor.fetchall()
-        print(f"SQL database version {result}")
-    except sql.Error as error:
-        print(f"SQL database error: {error}")
+    def init_SQL_Db(self, sql):
+        """Intializing SQL Lite Data base"""
+        try:
+            sql_connection = sql.connect("db\sql.db")
+            cursor = sql_connection.cursor()
+            print("SQL database initialized")
+            query = 'select sqlite_version();'
+            cursor.execute(query)
+            result = cursor.fetchall()
+            print(f"SQL database version {result}")
+        except sql.Error as error:
+            print(f"SQL database error: {error}")
+        
+        return sql_connection, cursor
+    
+    def create_check_db_table(self, cursor):
+        """Create table if not already, otherwise return existing table"""
+        table = cursor.execute(  """CREATE TABLE IF NOT EXISTS Passwords (
+            account_description CHAR(255) NOT NULL,
+            user CHAR(255) NOT NULL,
+            encrypted_password CHAR(255) NOT NULL,
+            email CHAR(255) NOT NULL
+        )""")
+        if table is not None:
+            print("Passwords table exist")
+        else:
+            print("Passwords table not exist")
+        return table
 
 def main(argv):
-    """Let's first init the DB"""
-    init_SQL_Db(sql)
-
     """Instantiating the Password object as empty, we'll fill out the data later on"""
     Password = Password_Obj()
+
+    """Let's first init the DB"""
+    sql_connection, cursor = Password.init_SQL_Db(sql)
+
+    """Creating table, otherwise returning existing table"""
+    db_table = Password.create_check_db_table(cursor)
 
     """Arguments system"""
     argv_index = argv.index(argv[0])
@@ -92,7 +111,8 @@ def main(argv):
         elif argv[argv_index] == "--showallpasswords":
             print("showing all passwords")
         elif argv[argv_index] == "--getpassword":
-            print("getting password")
+            """For now lets just print the data stored on the password object"""
+            Password.get_password_info()
         elif argv[argv_index] == "--help":
             print("Displaying usage options")
             sys.exit(0)
@@ -106,8 +126,6 @@ def main(argv):
     """Encrypting Password"""
     Password.encrypt_password()
 
-    """For now lets just print the data stored on the password object"""
-    Password.get_password_info()
-
 if __name__ == '__main__':
+    """Main will receive the arguments"""
     main(sys.argv[1:])
