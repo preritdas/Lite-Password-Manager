@@ -27,7 +27,7 @@ class Password_Obj:
         print(f"Encrypted Password: {self.encrypted_password}")
         
     def request_password_info(self):
-        """Requesting data from users to Instantiate the class/object representing a password"""
+        """Requesting data from users to instantiate the class/object representing a password"""
         print("\nPlease enter the following information to create a new password in the Lite Password Manager\n")
 
         print("\nPlease enter a description:")
@@ -56,12 +56,9 @@ class Password_Obj:
 
         return account_description, user,_password, email
     
-    def encrypt_password(self):
-        string = self.password.encode()
+    def encrypt_password(self, _password):
+        string = _password.encode()
         self.encrypted_password = fernet.encrypt(string)
-
-    def load_password_database(self):
-        return
 
     def init_SQL_Db(self, sql):
         """Intializing SQL Lite Data base"""
@@ -80,52 +77,83 @@ class Password_Obj:
     
     def create_check_db_table(self, cursor):
         """Create table if not already, otherwise return existing table"""
-        table = cursor.execute(  """CREATE TABLE IF NOT EXISTS Passwords (
+        table = cursor.execute(  
+            """
+            CREATE TABLE IF NOT EXISTS Passwords (
             account_description CHAR(255) NOT NULL,
             user CHAR(255) NOT NULL,
             encrypted_password CHAR(255) NOT NULL,
-            email CHAR(255) NOT NULL
-        )""")
+            email CHAR(255) NOT NULL);
+            """
+            )
         if table is not None:
             print("Passwords table exist")
         else:
             print("Passwords table not exist")
         return table
 
+    def save_password_db(self, cursor, sql_connection):
+        try:
+            cursor.execute(f''' 
+                INSERT INTO Passwords VALUES ("{self.account_description}", "{self.user}", "{self.encrypted_password}","{self.email}");
+            ''')
+        except sql_connection.Error as error:
+            print(f"SQL database error: {error}")
+        sql_connection.commit()
+        sql_connection.close()
+    
+    def show_all_passwords(self, cursor, sql_connection):
+        try:
+            cursor.execute("""SELECT * FROM Passwords""")
+            passwords = cursor.fetchall()
+            for password in passwords:
+                print(password)
+        except sql_connection.Error as error:
+            print(f"SQL database error: {error}")
+        sql_connection.close()
+
 def main(argv):
     """Instantiating the Password object as empty, we'll fill out the data later on"""
     Password = Password_Obj()
 
-    """Let's first init the DB"""
+    """Let's init the DB"""
     sql_connection, cursor = Password.init_SQL_Db(sql)
 
-    """Creating table, otherwise returning existing table"""
+    """Creating table, otherwise returning an existing table"""
     db_table = Password.create_check_db_table(cursor)
 
-    """Arguments system"""
+    """Parsing arguments"""
     argv_index = argv.index(argv[0])
     if argv_index == 0:
         if argv[argv_index] == "--newpassword":
             """Requesting information to the user"""
             account_description, user, _password, email = Password.request_password_info()
+
+            """Since we now have data from the user, let's fill up the empty Password Object"""   
+            Password.__init__(account_description, user, _password, email)
+
+            """Encrypting Password"""
+            Password.encrypt_password(_password)
+
+            """Saving Password to SQL Password DB"""
+            Password.save_password_db(cursor, sql_connection)
+
         elif argv[argv_index] == "--showallpasswords":
             print("showing all passwords")
+            Password.show_all_passwords(cursor, sql_connection)
+
         elif argv[argv_index] == "--getpassword":
             """For now lets just print the data stored on the password object"""
             Password.get_password_info()
+
         elif argv[argv_index] == "--help":
             print("Displaying usage options")
             sys.exit(0)
+
     else:
         print("Use --help to see options")
         sys.exit(0)
         
-    """Since we now have data from the user, let's fill up the empty Password Object"""   
-    Password.__init__(account_description, user, _password, email)
-
-    """Encrypting Password"""
-    Password.encrypt_password()
-
 if __name__ == '__main__':
     """Main will receive the arguments"""
     main(sys.argv[1:])
