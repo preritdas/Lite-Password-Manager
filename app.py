@@ -1,4 +1,4 @@
-#import os
+import os
 import sys, getpass
 import sqlite3 as sql
 from cryptography.fernet import Fernet
@@ -71,17 +71,16 @@ class Password_Obj:
         return account_description, user,_password, email
 
     def format_password_data(self,password_data):
-        password_dict = {"Account Description":None,
-                        "User":None,
-                        "Password":None,
-                        "Email":None}
-        p_keys = password_dict.keys()
+        password_dict = []
+        password_dict_keys = ["Account Description",
+                        "User",
+                        "Password",
+                        "Email"]
         if type(password_data) == list:
             for password in password_data:
-                for i in p_keys:
-                    print(p_keys + password)
+                password_dict.append(dict(zip(password_dict_keys,password)))
         if type(password_data) == tuple:
-            print(password_data)
+            password_dict.append(dict(zip(password_dict_keys,password_data)))
         return password_dict
     
     def encrypt_password(self, _password, fernet):
@@ -163,12 +162,13 @@ def main(argv):
         elif argv[argv_index] == "--showallpasswords":
             print("showing all passwords")
             all_passwords = Password.show_all_passwords(cursor, sql_connection)
-            print(all_passwords)
+            [print(passwords) for passwords in all_passwords]
             sys.exit(0)
 
         elif argv[argv_index] == "--getpassword":
             """For now lets just print the data stored on the password object"""
-            Password.get_password_info(cursor, sql_connection)
+            passwords = Password.get_password_info(cursor, sql_connection)
+            [print(password) for password in passwords]
             sys.exit(0)
 
         elif argv[argv_index] == "--help":
