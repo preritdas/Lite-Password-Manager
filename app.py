@@ -14,19 +14,18 @@ class Password_Obj:
         self.password = _password
         self.encrypted_password = encrypted_password
 
-    def get_password_info(self, cursor, sql_connection):
+    def get_password_info(self, cursor, sql_connection, account_description):
         """Getting the password data from DB based on account description"""   
-        print("\nPlease enter the account description")
-        account_description = input("Account description: ")
         try:
             cursor.execute(
                 f"""
                 SELECT * FROM Passwords WHERE account_description == '{account_description}'
                 """)
             password_data = cursor.fetchone()
-            sql_connection.close()
+            
         except sql_connection.Error as error:
-            print(error)
+            print(f"SQL database error: {error}")
+            sql_connection.close()
         return self.format_password_data(password_data)
         
     def show_all_passwords(self, cursor, sql_connection):
@@ -36,9 +35,23 @@ class Password_Obj:
             password_data= cursor.fetchall()
         except sql_connection.Error as error:
             print(f"SQL database error: {error}")
-        sql_connection.close()
+            sql_connection.close()
 
         return self.format_password_data(password_data)
+    
+    def delete_password(self, cursor, sql_connection, account_description):
+        """Deleting password based on the account description enter by the user"""
+        password_to_delete = self.get_password_info(cursor, sql_connection, account_description)
+        if not password_to_delete:
+            print(f"Password associated with with the account description: {account_description} was not found!")
+        else:
+            print(password_to_delete)
+            confirmation = input("Please enter Y or Yes if you want to delete the password, enter C or Cancel to cancel the operation: ")
+            if confirmation == "Y" or confirmation == "Yes":
+                print("Deleting password")
+            elif confirmation == "C" or confirmation == "Cancel":
+                print("Canceling operation")
+        return 0
 
     def request_password_info(self):
         """Requesting data from users to instantiate the class/object representing a password"""
@@ -162,17 +175,35 @@ def main(argv):
         elif argv[argv_index] == "--showallpasswords":
             print("showing all passwords")
             all_passwords = Password.show_all_passwords(cursor, sql_connection)
-            [print(passwords) for passwords in all_passwords]
+            if not all_passwords:
+                print("No passwords were found in the database")
+            else:
+                [print(passwords) for passwords in all_passwords]
             sys.exit(0)
 
         elif argv[argv_index] == "--getpassword":
             """For now lets just print the data stored on the password object"""
-            passwords = Password.get_password_info(cursor, sql_connection)
-            [print(password) for password in passwords]
+            print("\nPlease enter the account description")
+            account_description = input("Account description: ")
+            passwords = Password.get_password_info(cursor, sql_connection, account_description)
+            if not passwords:
+                print("Password was not found, try again")
+            else:
+               [print(password) for password in passwords] 
+            sys.exit(0)
+        
+        elif argv[argv_index] == "--deletepassword":
+            """Delete the password from the database based on the account description"""
+            print("\nPlease enter the account description")
+            account_description = input("Account description: ")
+            Password.delete_password(cursor, sql_connection, account_description)
             sys.exit(0)
 
         elif argv[argv_index] == "--help":
-            print("Displaying usage options")
+            print("Displaying usage options:\n")
+            print("Option --newpassword: Creates a new password.\n")
+            print("Option --showallpasswords: Retrieves all the passwords from the database.\n")
+            print("Option --getpassword: Retrieves the password based on the account description.\n")
             sys.exit(0)
 
     else:
