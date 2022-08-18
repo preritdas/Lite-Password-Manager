@@ -42,16 +42,23 @@ class Password_Obj:
     def delete_password(self, cursor, sql_connection, account_description):
         """Deleting password based on the account description enter by the user"""
         password_to_delete = self.get_password_info(cursor, sql_connection, account_description)
+        b_deleted = False
         if not password_to_delete:
             print(f"Password associated with with the account description: {account_description} was not found!")
         else:
-            print(password_to_delete)
+            [print(password) for password in password_to_delete]
             confirmation = input("Please enter Y or Yes if you want to delete the password, enter C or Cancel to cancel the operation: ")
             if confirmation == "Y" or confirmation == "Yes":
-                print("Deleting password")
+                try:
+                    cursor.execute(f"""DELETE FROM Passwords WHERE account_description == '{account_description}'""")
+                    sql_connection.commit()
+                    b_deleted = True
+                except sql_connection.Error as error:
+                    print(f"SQL database error: {error}")
+                    sql_connection.close()
             elif confirmation == "C" or confirmation == "Cancel":
                 print("Canceling operation")
-        return 0
+        return b_deleted
 
     def request_password_info(self):
         """Requesting data from users to instantiate the class/object representing a password"""
@@ -196,7 +203,11 @@ def main(argv):
             """Delete the password from the database based on the account description"""
             print("\nPlease enter the account description")
             account_description = input("Account description: ")
-            Password.delete_password(cursor, sql_connection, account_description)
+            b_success = Password.delete_password(cursor, sql_connection, account_description)
+            if b_success:
+                print(f"Password associated with {account_description} was deleted successfully")
+            else:
+                print(f"Password associated with {account_description} was not deleted, check the account description and try again")
             sys.exit(0)
 
         elif argv[argv_index] == "--help":
