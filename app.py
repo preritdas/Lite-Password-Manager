@@ -110,7 +110,7 @@ class Password_Obj:
         First we check if the file extist and if it is empty
         it could be possible the file exists but does not have a Fernet key stored    
         """
-        b_file_exists = os.path.exists("key//fernet_key.txt")
+        b_file_exists = os.path.exists(KEY_PATH)
         
         #File exists on directory
         if b_file_exists:
