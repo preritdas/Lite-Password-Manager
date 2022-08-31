@@ -1,7 +1,9 @@
-import os
+import os, os.path
 import sys, getpass
 import sqlite3 as sql
 from cryptography.fernet import Fernet
+
+KEY_PATH = "key//fernet_key.txt"
 
 """This is the main class representing a Password object and all associated methods"""
 class Password_Obj:
@@ -103,6 +105,32 @@ class Password_Obj:
             password_dict.append(dict(zip(password_dict_keys,password_data)))
         return password_dict
     
+    def init_encryption_keys(self, Fernet):
+        """
+        First we check if the file extist and if it is empty
+        it could be possible the file exists but does not have a Fernet key stored    
+        """
+        b_file_exists = os.path.exists("key//fernet_key.txt")
+        
+        #File exists on directory
+        if b_file_exists:
+            #File is not empty
+            b_file_empty = os.stat(KEY_PATH).st_size != 0
+            if b_file_empty:
+                #Let's read the file and retrive the fernet key
+                with open(KEY_PATH, "r") as file:
+                    key = file.read()
+                    key = key.encode()
+                    print(key)
+                    print(type(key))
+        else:
+            with open(KEY_PATH, "w") as file:
+                key = Fernet.generate_key()
+                print(key)
+                print(type(key))
+                file.write(key.decode("utf-8"))
+        return key
+
     def encrypt_password(self, _password, fernet):
         string = _password.encode()
         self.encrypted_password = fernet.encrypt(string)
@@ -116,9 +144,6 @@ class Password_Obj:
         try:
             sql_connection = sql.connect("db\sql.db")
             cursor = sql_connection.cursor()
-            query = 'select sqlite_version();'
-            cursor.execute(query)
-            result = cursor.fetchall()
         except sql.Error as error:
             print(f"SQL database error: {error}")
         
@@ -160,6 +185,9 @@ def main(argv):
 
     """Creating table, otherwise returning an existing table"""
     db_table = Password.create_check_db_table(cursor)
+
+    key = Password.init_encryption_keys(Fernet)
+    print(key)
 
     """Parsing arguments"""
     #Check on this later! 
