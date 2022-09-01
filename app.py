@@ -24,8 +24,8 @@ class Password_Obj:
             account_description: Describing the account associated with the password. Defaults to None.
             user: User account. Defaults to None.
             _password: Password for the associated account. Defaults to None.
-            email: Email for the associated password. Defaults to None.
-            encrypted_password: Is an optional argument for the constructor, we just really need it a place holder for the encrypted password
+            email: Email for the associated account. Defaults to None.
+            encrypted_password: Is an optional argument for the constructor, we just really need a place holder for the encrypted password
         """
         self.account_description = account_description
         self.user = user
@@ -35,7 +35,8 @@ class Password_Obj:
 
     def get_password_info(self, cursor, sql_connection, account_description, fernet):
         '''
-        Requesting account description from the user to then query the DB
+        Requesting account description from the user to then query the DB to retrive
+        the password for the associated account
 
         Args:
             cursor: SQL cursor object
