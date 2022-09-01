@@ -1,3 +1,11 @@
+'''
+Lite Password Manager v1.0
+Author: Jorge Cerdas Valverde
+LinkedIn: https://www.linkedin.com/in/ing-jorgecerdas/
+Description:
+This is a Password Manager using SQL Lite to store the passwords on a relational table, also using the Fernet Library to encrypt and decrypt
+the passwords once the user wants to see them. 
+'''
 import os, os.path
 import sys, getpass
 import sqlite3 as sql
@@ -10,13 +18,14 @@ class Password_Obj:
    
     def __init__(self,account_description = None, user = None, _password = None, email = None, *encrypted_password):
         """
-        Password Object constructor, it will init with default None values.
+        Password Object constructor, it will init with by default with None values.
 
         Args:
             account_description: Describing the account associated with the password. Defaults to None.
             user: User account. Defaults to None.
             _password: Password for the associated password. Defaults to None.
             email: Email for the associated password. Defaults to None.
+            encrypted_password: Is an optional argument for the constructor, we just really need it a place holder for the encrypted password
         """
         self.account_description = account_description
         self.user = user
@@ -30,7 +39,7 @@ class Password_Obj:
 
         Args:
             cursor: SQL cursor object
-            sql_connection: SQL object connection
+            sql_connection: SQL connection object
             account_description: Account associated with the password
             fernet: Fernet object to encrypt or decrypt the password
 
@@ -55,7 +64,7 @@ class Password_Obj:
 
         Args:
             cursor: SQL cursor object
-            sql_connection: SQL object connection
+            sql_connection: SQL connection object
             fernet: Fernet object to encrypt or decrypt the password
 
         Returns:
@@ -76,7 +85,7 @@ class Password_Obj:
 
         Args:
             cursor: SQL cursor object
-            sql_connection: SQL object connection
+            sql_connection: SQL connection object
             account_description: Describing the account associated with the password. 
 
         Returns:
@@ -103,7 +112,7 @@ class Password_Obj:
 
     def request_password_info(self):
         '''
-        Requesting data from users to instantiate the class/object representing a password
+        Requesting data from users to instantiate the object representing a Password
         
         Args:
             Password Object
@@ -111,11 +120,10 @@ class Password_Obj:
         Returns:
             strings : account_description, user, _password, email
         '''
-
         print("\nPlease enter the following information to create a new password in the Lite Password Manager\n")
 
         # print("\nPlease enter a description:")
-        account_description = input("Please enter a description:")
+        account_description = input("Please enter an account description:")
 
         # print("\nPlease enter the user name:")
         user = input("Please enter the user name:")
@@ -141,7 +149,16 @@ class Password_Obj:
         return account_description, user,_password, email
 
     def format_password_data(self, password_data, fernet):
-        """Here we are going to format the password data to a dict and also decrypt the password"""
+        '''
+        Here we are going to format the password data to a dictionary and also decrypt the encrypted password
+
+        Args:
+            password_data: Password data to be formatted
+            fernet: Fernet object to encrypt or decrypt the password
+
+        Returns:
+            dict: Already formatted password data and decrypted password
+        '''
         password_dict = []
         password_dict_keys = ["Account Description",
                         "User",
@@ -155,10 +172,17 @@ class Password_Obj:
         return self.decrypt_password(password_dict, fernet)
     
     def init_encryption_keys(self, Fernet):
-        """
-        First we check if the file extist and if it is empty
-        it could be possible the file exists but does not have a Fernet key stored    
-        """
+        '''
+        First we check if the file extist and if it is empty, 
+        if not then create the file to stored the Fernet key
+        it could be possible the file exists but does not have a Fernet key stored  
+
+        Args:
+            Fernet: Fernet object to decrypt and encrypt the password
+
+        Returns:
+            Object: fernet object associated with the Fernet key
+        '''
         b_file_exists = os.path.exists(KEY_PATH)
         
         #File exists on directory
@@ -210,7 +234,16 @@ class Password_Obj:
         return password_dict 
 
     def init_SQL_Db(self, sql):
-        """Intializing SQL Lite Data base"""
+        '''
+        Intializing SQL Lite Data base
+
+        Args:
+            sql: imported SQL object from the SQL Lite module
+
+        Returns:
+            sql_connection: SQL connection object
+            cursor: SQL cursor object
+        '''
         try:
             sql_connection = sql.connect("db\sql.db")
             cursor = sql_connection.cursor()
@@ -220,7 +253,16 @@ class Password_Obj:
         return sql_connection, cursor
     
     def create_check_db_table(self, cursor):
-        """Create table if not already, otherwise return existing table"""
+        '''
+        Create table if not already, otherwise return existing table
+
+        Args:
+            cursor: SQL cursor object
+
+        Returns:
+            table: Table object representing the Password table on the DB.
+        '''
+        """"""
         try:
             table = cursor.execute(  
                 """
@@ -236,6 +278,13 @@ class Password_Obj:
         return table
 
     def save_password_db(self, cursor, sql_connection):
+        '''
+        Saving password to DB, notice it is saving the encrypted password
+
+        Args:
+            cursor: SQL cursor object
+            sql_connection: SQL connection object
+        '''
         try:
             cursor.execute(f''' 
                 INSERT INTO Passwords VALUES ("{self.account_description}", "{self.user}", "{self.encrypted_password}","{self.email}");
@@ -259,7 +308,6 @@ def main(argv):
     fernet = Password.init_encryption_keys(Fernet)
 
     """Parsing arguments"""
-    #Check on this later! 
     argv_index = argv.index(argv[0])
     if argv_index == 0:
         if argv[argv_index] == "--newpassword":
