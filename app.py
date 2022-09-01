@@ -23,7 +23,7 @@ class Password_Obj:
         Args:
             account_description: Describing the account associated with the password. Defaults to None.
             user: User account. Defaults to None.
-            _password: Password for the associated password. Defaults to None.
+            _password: Password for the associated account. Defaults to None.
             email: Email for the associated password. Defaults to None.
             encrypted_password: Is an optional argument for the constructor, we just really need it a place holder for the encrypted password
         """
