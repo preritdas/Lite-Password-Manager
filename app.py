@@ -18,7 +18,7 @@ class Password_Obj:
    
     def __init__(self,account_description = None, user = None, _password = None, email = None, *encrypted_password):
         """
-        Password Object constructor, it will init with by default with None values.
+        Password Object constructor, it will initiliaze with default None values.
 
         Args:
             account_description: Describing the account associated with the password. Defaults to None.
