@@ -16,7 +16,7 @@ KEY_PATH = "key//fernet_key.txt"
 """This is the main class representing a Password object and all associated methods"""
 class Password_Obj:
    
-    def __init__(self,account_description = None, user = None, _password = None, email = None, *encrypted_password):
+    def __init__(self, account_description = None, user = None, _password = None, email = None, *encrypted_password):
         """
         Password Object constructor, it will initiliaze with default None values.
 
@@ -80,7 +80,7 @@ class Password_Obj:
 
         return self.format_password_data(password_data, fernet)
     
-    def delete_password(self, cursor, sql_connection, account_description):
+    def delete_password(self, cursor, sql_connection, account_description, fernet):
         '''
         Deleting password based on the account description enter by the user
 
@@ -92,7 +92,7 @@ class Password_Obj:
         Returns:
             bool: b_deleted if the password was deleted successfully
         '''
-        password_to_delete = self.get_password_info(cursor, sql_connection, account_description)
+        password_to_delete = self.get_password_info(cursor, sql_connection, account_description, fernet)
         b_deleted = False
         if not password_to_delete:
             print(f"Password associated with with the account description: {account_description} was not found!")
@@ -309,63 +309,36 @@ def main(argv):
     fernet = Password.init_encryption_keys(Fernet)
 
     """Parsing arguments"""
-    argv_index = argv.index(argv[0])
-    if argv_index == 0:
-        if argv[argv_index] == "--newpassword":
-            """Requesting information to the user"""
-            account_description, user, _password, email = Password.request_password_info()
+    if len(argv) != 0:
+    #If argv is empty that means the user did not pass any arguments, lets tell them how to use the app.
+        argv_index = argv.index(argv[0])
+        match argv[argv_index]:
+            case "--newpassword":
+                account_description, user, _password, email = Password.request_password_info()
+                Password.__init__(account_description, user, _password, email)
+                Password.encrypt_password(_password, fernet)
+                Password.save_password_db(cursor, sql_connection)
+                sys.exit(0)
 
-            """Since we now have data from the user, let's fill up the empty Password Object"""   
-            Password.__init__(account_description, user, _password, email)
-
-            """Encrypting Password"""
-            Password.encrypt_password(_password, fernet)
-
-            """Saving Password to SQL Password DB"""
-            Password.save_password_db(cursor, sql_connection)
-            sys.exit(0)
-
-        elif argv[argv_index] == "--showallpasswords":
-            print("showing all passwords")
-            all_passwords = Password.show_all_passwords(cursor, sql_connection, fernet)
-            if not all_passwords:
-                print("No passwords were found in the database")
-            else:
+            case "--showallpasswords":
+                print("Show all Passwords!")
+                all_passwords = Password.show_all_passwords(cursor, sql_connection, fernet)
                 [print(passwords) for passwords in all_passwords]
-            sys.exit(0)
-
-        elif argv[argv_index] == "--getpassword":
-            """For now lets just print the data stored on the password object"""
-            print("\nPlease enter the account description")
-            account_description = input("Account description: ")
-            passwords = Password.get_password_info(cursor, sql_connection, account_description, fernet)
-            if not passwords:
-                print("Password was not found, try again")
-            else:
-               [print(password) for password in passwords] 
-            sys.exit(0)
-        
-        elif argv[argv_index] == "--deletepassword":
-            """Delete the password from the database based on the account description"""
-            print("\nPlease enter the account description")
-            account_description = input("Account description: ")
-            b_success = Password.delete_password(cursor, sql_connection, account_description)
-            if b_success:
-                print(f"Password associated with {account_description} was deleted successfully")
-            else:
-                print(f"Password associated with {account_description} was not deleted, check the account description and try again")
-            sys.exit(0)
-
-        elif argv[argv_index] == "--help":
-            print("Displaying usage options:\n")
-            print("Option --newpassword: Creates a new password.\n")
-            print("Option --showallpasswords: Retrieves all the passwords from the database.\n")
-            print("Option --getpassword: Retrieves the password based on the account description.\n")
-            sys.exit(0)
-
+                sys.exit(0)
+            case "--getpassword":
+                print("Get Password!")
+            case "--deletepassword":
+                print("Delete Password!")
+            case "--help":
+                print("Displaying usage options:\n")
+                print("Option --newpassword: Creates a new password.\n")
+                print("Option --showallpasswords: Retrieves all the passwords from the database.\n")
+                print("Option --getpassword: Retrieves the password based on the account description.\n")
+                print("Option --deletepassword: Deletes the password based on the account description.\n")
+            case _: 
+                print("Use --help to see options")
     else:
         print("Use --help to see options")
-        sys.exit(0)
         
 if __name__ == '__main__':
     """Main will receive the arguments"""
