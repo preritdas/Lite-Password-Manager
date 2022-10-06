@@ -326,9 +326,24 @@ def main(argv):
                 [print(passwords) for passwords in all_passwords]
                 sys.exit(0)
             case "--getpassword":
-                print("Get Password!")
+                print("\nPlease enter the account description")
+                account_description = input("Account description: ")
+                passwords = Password.get_password_info(cursor, sql_connection, account_description, fernet)
+                if not passwords:
+                    print("Password was not found, try again")
+                else:
+                    [print(password) for password in passwords] 
+                sys.exit(0)
             case "--deletepassword":
-                print("Delete Password!")
+                """Delete the password from the database based on the account description"""
+                print("\nPlease enter the account description")
+                account_description = input("Account description: ")
+                b_success = Password.delete_password(cursor, sql_connection, account_description)
+                if b_success:
+                    print(f"Password associated with {account_description} was deleted successfully")
+                else:
+                    print(f"Password associated with {account_description} was not deleted, check the account description and try again")
+                sys.exit(0)
             case "--help":
                 print("Displaying usage options:\n")
                 print("Option --newpassword: Creates a new password.\n")
