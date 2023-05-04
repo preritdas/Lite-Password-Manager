@@ -13,7 +13,6 @@ from cryptography.fernet import Fernet
 from Password.Password import Password_Obj
 import typer as tp
 
-
 """Instantiating the Password object as empty, we'll fill out the data later on"""
 Password = Password_Obj()
 
@@ -29,6 +28,7 @@ App = tp.Typer()
 
 @App.command()
 def new_password():
+    '''Creates a new password'''
     account_description, user, _password, email = Password.request_password_info()
     Password.__init__(account_description, user, _password, email)
     Password.encrypt_password(_password, fernet)
@@ -37,13 +37,18 @@ def new_password():
 
 @App.command()
 def show_all_passwords():
+    '''Get all the passwords from the database'''
     print("Show all Passwords!")
     all_passwords = Password.show_all_passwords(cursor, sql_connection, fernet)
-    [print(passwords) for passwords in all_passwords]
+    for index in range(len(all_passwords)):
+        password = all_passwords[index]
+        for key in password:
+            print(f'{key} : {password[key]}\n')
     sys.exit(0)
 
 @App.command()
 def get_password():
+    '''Get the password information based on the account description'''
     print("\nPlease enter the account description")
     account_description = input("Account description: ")
     passwords = Password.get_password_info(cursor, sql_connection, account_description, fernet)
@@ -64,15 +69,6 @@ def delete_password():
     else:
         print(f"Password associated with {account_description} was not deleted, check the account description and try again")
     sys.exit(0)
-
-@App.command()
-def help():
-    print("Displaying usage options:\n")
-    print("Option --newpassword: Creates a new password.\n")
-    print("Option --showallpasswords: Retrieves all the passwords from the database.\n")
-    print("Option --getpassword: Retrieves the password based on the account description.\n")
-    print("Option --deletepassword: Deletes the password based on the account description.\n")
-
         
 if __name__ == '__main__':
     """Main will receive the arguments"""
