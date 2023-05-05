@@ -1,14 +1,16 @@
+"""Create the main Password object."""
 import os, os.path
 import sys, getpass
 import sqlite3 as sql
 from cryptography.fernet import Fernet
 
+
 KEY_PATH = "key//fernet_key.txt"
 
-"""This is the main class representing a Password object and all associated methods"""
-class Password_Obj:
-   
-    def __init__(self, account_description = None, user = None, _password = None, email = None, *encrypted_password):
+
+class Password:
+    """This is the main class representing a Password object and all associated methods."""
+    def __init__(self, account_description = None, user = None, _password = None, email = None, encrypted_password = None):
         """
         Password Object constructor, it will initiliaze with default None values.
         Args:
@@ -25,7 +27,7 @@ class Password_Obj:
         self.encrypted_password = encrypted_password
 
     def get_password_info(self, cursor, sql_connection, account_description, fernet):
-        '''
+        """
         Requesting account description from the user to then query the DB to retrive
         the password for the associated account
         Args:
@@ -35,21 +37,20 @@ class Password_Obj:
             fernet: Fernet object to encrypt or decrypt the password
         Returns:
             dict: password_data
-        '''
+        """
         try:
             cursor.execute(
                 f"""
                 SELECT * FROM Passwords WHERE account_description == '{account_description}'
                 """)
             password_data = cursor.fetchone()
-            
         except sql_connection.Error as error:
             print(f"SQL database error: {error}")
             sql_connection.close()
         return self.format_password_data(password_data, fernet)
         
     def show_all_passwords(self, cursor, sql_connection, fernet):
-        '''
+        """
         Function to retrieve all the passwords from the SQL DB
         Args:
             cursor: SQL cursor object
@@ -57,7 +58,7 @@ class Password_Obj:
             fernet: Fernet object to encrypt or decrypt the password
         Returns:
             dict: password_data
-        '''
+        """
         try:
             cursor.execute("""SELECT * FROM Passwords""")
             password_data= cursor.fetchall()
@@ -68,7 +69,7 @@ class Password_Obj:
         return self.format_password_data(password_data, fernet)
     
     def delete_password(self, cursor, sql_connection, account_description, fernet):
-        '''
+        """
         Deleting password based on the account description enter by the user
         Args:
             cursor: SQL cursor object
@@ -76,7 +77,7 @@ class Password_Obj:
             account_description: Describing the account associated with the password. 
         Returns:
             bool: b_deleted if the password was deleted successfully
-        '''
+        """
         password_to_delete = self.get_password_info(cursor, sql_connection, account_description, fernet)
         b_deleted = False
         if not password_to_delete:
@@ -97,14 +98,14 @@ class Password_Obj:
         return b_deleted
 
     def request_password_info(self):
-        '''
+        """
         Requesting data from users to instantiate the object representing a Password
         
         Args:
             Password Object
         Returns:
             strings : account_description, user, _password, email
-        '''
+        """
         print("\nPlease enter the following information to create a new password in the Lite Password Manager\n")
 
         # print("\nPlease enter a description:")
@@ -134,14 +135,14 @@ class Password_Obj:
         return account_description, user,_password, email
 
     def format_password_data(self, password_data, fernet):
-        '''
+        """
         Here we are going to format the password data to a dictionary and also decrypt the encrypted password
         Args:
             password_data: Password data to be formatted
             fernet: Fernet object to encrypt or decrypt the password
         Returns:
             dict: Already formatted password data and decrypted password
-        '''
+        """
         password_dict = []
         password_dict_keys = ["Account Description",
                         "User",
@@ -155,7 +156,7 @@ class Password_Obj:
         return self.decrypt_password(password_dict, fernet)
     
     def init_encryption_keys(self, Fernet):
-        '''
+        """
         First we check if the file extist and if it is empty, 
         if not then create the file to stored the Fernet key
         it could be possible the file exists but does not have a Fernet key stored  
@@ -163,7 +164,7 @@ class Password_Obj:
             Fernet: Fernet object to decrypt and encrypt the password
         Returns:
             Object: fernet object associated with the Fernet key
-        '''
+        """
         b_file_exists = os.path.exists(KEY_PATH)
         
         #File exists on directory
@@ -184,17 +185,17 @@ class Password_Obj:
         return fernet
 
     def encrypt_password(self, _password, fernet):
-        '''
+        """
         Encrypting password using the fernet object
         Args:
             _password: Password to encrypt
             fernet: Fernet object to encrypt or decrypt the password
-        '''
+        """
         string = _password.encode()
         self.encrypted_password = fernet.encrypt(string)
 
     def decrypt_password(self, password_dict, fernet):
-        '''
+        """
         Decrypting password using the fernet object, this function will be called 
         from the Format Data Function and return a dict containing the password data
         Args:
@@ -202,7 +203,7 @@ class Password_Obj:
             fernet: Fernet object to encrypt or decrypt the password
         Returns:
             dict: password_dict
-        '''
+        """
         for data in password_dict:
             encrypted_password = data["Password"]
             encrypted_password = encrypted_password.strip("b'")
@@ -212,14 +213,14 @@ class Password_Obj:
         return password_dict 
 
     def init_SQL_Db(self, sql):
-        '''
+        """
         Intializing SQL Lite Data base
         Args:
             sql: imported SQL object from the SQL Lite module
         Returns:
             sql_connection: SQL connection object
             cursor: SQL cursor object
-        '''
+        """
         try:
             sql_connection = sql.connect("db\sql.db")
             cursor = sql_connection.cursor()
@@ -229,13 +230,13 @@ class Password_Obj:
         return sql_connection, cursor
     
     def create_check_db_table(self, cursor):
-        '''
+        """
         Create table if not already, otherwise return existing table
         Args:
             cursor: SQL cursor object
         Returns:
             table: Table object representing the Password table on the DB.
-        '''
+        """
         """"""
         try:
             table = cursor.execute(  
@@ -252,16 +253,16 @@ class Password_Obj:
         return table
 
     def save_password_db(self, cursor, sql_connection):
-        '''
+        """
         Saving password to DB, notice it is saving the encrypted password
         Args:
             cursor: SQL cursor object
             sql_connection: SQL connection object
-        '''
+        """
         try:
-            cursor.execute(f''' 
+            cursor.execute(f""" 
                 INSERT INTO Passwords VALUES ("{self.account_description}", "{self.user}", "{self.encrypted_password}","{self.email}");
-            ''')
+            """)
             print("Password has been saved successfully")
         except sql_connection.Error as error:
             print(f"SQL database error: {error}")

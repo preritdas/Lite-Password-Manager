@@ -1,32 +1,43 @@
-'''
+"""
 Lite Password Manager v1.0
 Author: Jorge Cerdas Valverde
 LinkedIn: https://www.linkedin.com/in/ing-jorgecerdas/
 Description:
-This is a Password Manager using SQL Lite to store the passwords on a relational table, also using the Fernet Library to encrypt and decrypt
+This is a Password Manager using SQL Lite to store the passwords on a relational table, 
+also using the Fernet Library to encrypt and decrypt
 the passwords once the user wants to see them. 
-'''
-import os, os.path
-import sys, getpass
-import sqlite3 as sql
-from cryptography.fernet import Fernet
-from Password.Password import Password_Obj
+"""
 import typer as tp
 
-"""Instantiating the Password object as empty, we'll fill out the data later on"""
+import sqlite3 as sql
+import os
+import sys, getpass
+from cryptography.fernet import Fernet
+
+from Password.Password import Password_Obj
+
+
+# ---- Initializations ----
+
+# Passwords - empty, add them later
 Password = Password_Obj()
 
-"""Let's init the DB"""
+# Database
 sql_connection, cursor = Password.init_SQL_Db(sql)
 
-"""Creating table, otherwise returning an existing table"""
+# Creating table or creating empty
 db_table = Password.create_check_db_table(cursor)
 
+# Fernet
 fernet = Password.init_encryption_keys(Fernet)
 
-App = tp.Typer()
+# Main CLI app
+app = tp.Typer()
 
-@App.command()
+
+# ---- Commands ----
+
+@app.command()
 def new_password():
     '''Creates a new password'''
     account_description, user, _password, email = Password.request_password_info()
@@ -35,7 +46,8 @@ def new_password():
     Password.save_password_db(cursor, sql_connection)
     sys.exit(0)
 
-@App.command()
+
+@app.command()
 def show_all_passwords():
     '''Get all the passwords from the database'''
     print("Show all Passwords!")
@@ -46,7 +58,8 @@ def show_all_passwords():
             print(f'{key} : {password[key]}\n')
     sys.exit(0)
 
-@App.command()
+
+@app.command()
 def get_password():
     '''Get the password information based on the account description'''
     print("\nPlease enter the account description")
@@ -58,7 +71,8 @@ def get_password():
         [print(password) for password in passwords] 
     sys.exit(0)    
 
-@App.command()
+
+@app.command()
 def delete_password():
     """Delete the password from the database based on the account description"""
     print("\nPlease enter the account description")
@@ -70,6 +84,8 @@ def delete_password():
         print(f"Password associated with {account_description} was not deleted, check the account description and try again")
     sys.exit(0)
         
+
+# ---- Run the CLI ----
+
 if __name__ == '__main__':
-    """Main will receive the arguments"""
-    App()
+    app()
